@@ -22,8 +22,8 @@ check(_, Labels, CurrentState, [], neg(X)) :-
     write("Checking if neg is true"), nl.
 
 % And
-check(Transitions, Labels, CurrentState, [], and(F,G)) :- 
-    ...
+% check(Transitions, Labels, CurrentState, [], and(F,G)) :- 
+%     ...
 
 % Or
 % check(Transitions, Labels, CurrentState, [], or(F,G)) :- 
