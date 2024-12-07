@@ -12,26 +12,22 @@ verify(Input) :-
 % see if presenece of X is true for input state (s0, s1, etc...)
 check(_, Labels, CurrentState, [], X) :- 
     member([CurrentState, Props], Labels),
-    member(X, Props), 
-    write('Checking if literal is true: '), write(X), write(Props), nl.
+    member(X, Props).
 
 % see if absence of X is true for input state (s0, s1, etc...)
 check(_, Labels, CurrentState, [], neg(X)) :- 
     member([CurrentState, Props], Labels),
-    \+member(X, Props),
-    write('Checking if neg is true'), nl.
+    \+member(X, Props).
 
 % And - is both F and G true for current state?
 check(Transitions, Labels, CurrentState, [], and(F,G)) :- 
     check(Transitions, Labels, CurrentState, [], F),
-    check(Transitions, Labels, CurrentState, [], G), 
-    write('Checking for and...'), nl.
+    check(Transitions, Labels, CurrentState, [], G).
 
 % Or - is one of F or G true for current state?
 check(Transitions, Labels, CurrentState, [], or(F,G)) :- 
     (check(Transitions, Labels, CurrentState, [], F) ; 
-    check(Transitions, Labels, CurrentState, [], G)), 
-    write('Checking for or...'), nl.
+    check(Transitions, Labels, CurrentState, [], G)).
 
 % AX - Do all next states to CurrentState hold true for F?
 check(Transitions, Labels, CurrentState, [], ax(F)) :-
@@ -39,22 +35,18 @@ check(Transitions, Labels, CurrentState, [], ax(F)) :-
     forall(
         member(NextState, Successors), 
         check(Transitions, Labels, NextState, [], F)
-    ),
-    write('Checking for ax...'), nl.
+    ).
 
 % EX - Does there exist a next state to CurrentState that hold true for F?
 check(Transitions, Labels, CurrentState, [], ex(F)) :-
     member([CurrentState, Successors], Transitions),
     member(NextState, Successors),
-    check(Transitions, Labels, NextState, [], F),
-    write('Checking for ex...'), nl.
+    check(Transitions, Labels, NextState, [], F).
 
 % AG - Does F hold true along every possible path from CurrentState?
 check(Transitions, Labels, CurrentState, Visited, ag(F)) :-
-    write('Current state: '), write(CurrentState), nl, 
-    write('Visited: '), write(Visited), nl, 
     (member(CurrentState, Visited) ->
-        write('State already visited, skipping further checks...'), nl
+        true
     ;
         % If not visited, perform the AG check
         (
@@ -62,16 +54,13 @@ check(Transitions, Labels, CurrentState, Visited, ag(F)) :-
             check(Transitions, Labels, CurrentState, [], F),
             % Get the successors of the current state
             member([CurrentState, Successors], Transitions),
-            write('Successors: '), write(Successors), nl,
             % Recursively check AG for all successors
             forall(
                 member(Successor, Successors),
                 check(Transitions, Labels, Successor, [CurrentState|Visited], ag(F))
-            ),
-            write('AG condition satisfied for state: '), write(CurrentState), nl
+            )
         )
-    ),
-    write('Checking AG...'), nl.
+    ).
 
 % Helper predicate to find if something exists
 exists(Condition, Goal) :-  
@@ -80,32 +69,24 @@ exists(Condition, Goal) :-
 
 % EG - Does F hold true along at least one possible path from CurrentState?
 check(Transitions, Labels, CurrentState, Visited, eg(F)) :-
-    write('Current state: '), write(CurrentState), nl, 
-    write('Visited: '), write(Visited), nl,
     (member(CurrentState, Visited) ->
-        write('State is already visited, skipping further checks...')
-        % write 'true' instead of write later
+        true
     ;
         (
         % check if F is valid for current state, ex. if F=p is true for state CurrentState=s0
         check(Transitions, Labels, CurrentState, [], F),
         member([CurrentState, Successors], Transitions),
-        write('Successors: '), write(Successors), nl, 
         exists(
             member(Successor, Successors),
             check(Transitions, Labels, Successor, [CurrentState | Visited], eg(F))
-        ), 
-        write('EG checked for state: '), write(CurrentState), nl
+            ) 
         )    
-    ), 
-    write('Checking EG...'), nl.
+    ).
 
 % EF - Does there exist at least one path in which F will eventually hold true?
-check(Transitions, Labels, CurrentState, Visited, ef(F)) :-
-    write('Current state: '), write(CurrentState), nl, 
-    write('Visited: '), write(Visited), nl, 
+check(Transitions, Labels, CurrentState, Visited, ef(F)) :- 
     (check(Transitions, Labels, CurrentState, [], F) ->
-        write('State is true for current state...')
+        true
         ;
         (\+member(CurrentState, Visited) ->
             member([CurrentState, Successors], Transitions),
@@ -114,15 +95,12 @@ check(Transitions, Labels, CurrentState, Visited, ef(F)) :-
                 check(Transitions, Labels, Successor, [CurrentState|Visited], ef(F))
             )
         )
-    ),
-    write('Checking for EF...'), nl.
+    ).
 
 % AF - Will F eventually hold true for every existing path from CurrentState?
 check(Transitions, Labels, CurrentState, Visited, af(F)) :-
-    write('Current state: '), write(CurrentState), nl, 
-    write('Visited: '), write(Visited), nl, 
     (check(Transitions, Labels, CurrentState, [], F) ->
-        write('State is true for current state...')
+        true
         ;
         (\+member(CurrentState, Visited) ->
             member([CurrentState, Successors], Transitions),
@@ -131,5 +109,5 @@ check(Transitions, Labels, CurrentState, Visited, af(F)) :-
                 check(Transitions, Labels, Successor, [CurrentState|Visited], af(F))
             )
         )
-    ),
-    write('Checking for AF...'), nl.
+    ).
+    
