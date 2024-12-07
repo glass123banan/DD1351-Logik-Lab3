@@ -49,13 +49,6 @@ check(Transitions, Labels, CurrentState, [], ex(F)) :-
     check(Transitions, Labels, NextState, [], F),
     write('Checking for ex...'), nl.
 
-check_list_tail(Element, [_|Tail]) :-
-    write('Entering check list tail...'), nl, 
-    member(Element, Tail), 
-    write('Tail: '), write(Tail), nl, 
-    write('Element: '), write(Element), nl. 
-
-
 % AG - Does F hold true along every possible path from CurrentState?
 check(Transitions, Labels, CurrentState, Visited, ag(F)) :-
     write('Current state: '), write(CurrentState), nl, 
@@ -78,25 +71,68 @@ check(Transitions, Labels, CurrentState, Visited, ag(F)) :-
             write('AG condition satisfied for state: '), write(CurrentState), nl
         )
     ),
-    % \+check_list_tail(CurrentState, Visited),
-    % check(Transitions, Labels, CurrentState, [], F),
-    % member([CurrentState, Successors], Transitions),
-    % write('Successors: '), write(Successors), nl,
-
-    % forall(
-    %     member(Successor, Successors),
-    %     check(Transitions, Labels, Successor, [CurrentState|Visited], ag(F))
-    % ),
     write('Checking AG...'), nl.
 
-% % EG - Does F hold true along at least one possible path from CurrentState?
-% check(Transitions, Labels, CurrentState, Visited, eg(F)) :-
-%     % todo
+% Helper predicate to find if something exists
+exists(Condition, Goal) :-  
+    call(Condition),        % Call condition 
+    call(Goal).             % If condition is true, eval goal
 
-% % EF - Does there exist at least one path in which F will eventually hold true?
-% check(Transitions, Labels, CurrentState, Visited, ef(F)) :-
-%     % todo
+% EG - Does F hold true along at least one possible path from CurrentState?
+check(Transitions, Labels, CurrentState, Visited, eg(F)) :-
+    write('Current state: '), write(CurrentState), nl, 
+    write('Visited: '), write(Visited), nl,
+    (member(CurrentState, Visited) ->
+        write('State is already visited, skipping further checks...')
+        % write 'true' instead of write later
+    ;
+        (
+        % check if F is valid for current state, ex. if F=p is true for state CurrentState=s0
+        check(Transitions, Labels, CurrentState, [], F),
+        member([CurrentState, Successors], Transitions),
+        write('Successors: '), write(Successors), nl, 
+        exists(
+            member(Successor, Successors),
+            check(Transitions, Labels, Successor, [CurrentState | Visited], eg(F))
+        ), 
+        write('EG checked for state: '), write(CurrentState), nl
+        )    
+    ), 
+    write('Checking EG...'), nl.
 
-% % AF - Will F eventually hold true for every existing path from CurrentState?
-% check(Transitions, Labels, CurrentState, af(F)) :-
-%     % todo
+% EF - Does there exist at least one path in which F will eventually hold true?
+check(Transitions, Labels, CurrentState, Visited, ef(F)) :-
+    write('Current state: '), write(CurrentState), nl, 
+    write('Visited: '), write(Visited), nl, 
+    (check(Transitions, Labels, CurrentState, [], F) ->
+        write('State is true for current state...')
+        ;
+        (\+member(CurrentState, Visited) ->
+            member([CurrentState, Successors], Transitions),
+            exists(
+                member(Successor, Successors),
+                check(Transitions, Labels, Successor, [CurrentState|Visited], ef(F))
+            )
+        )
+    ),
+    write('Checking for EF...'), nl.
+
+% AF - Will F eventually hold true for every existing path from CurrentState?
+check(Transitions, Labels, CurrentState, Visited, af(F)) :-
+    write('Current state: '), write(CurrentState), nl, 
+    write('Visited: '), write(Visited), nl, 
+    (\+member(CurrentState, Visited) ->
+        check(Transitions, Labels, CurrentState, [], F),
+        member([CurrentState, Successors], Transitions),
+        forall(
+            member(Successor, Successors),
+            check(Transitions, Labels, Successor, [CurrentState|Visited], af(F))
+            % (check(Transitions, Labels, Successor, [CurrentState|Visited], af(F)) -> 
+            %     last([CurrentState|Visited], LastElement),
+            %     check(Transitions, Labels, LastElement, [], F)
+            % )
+        ),
+
+        check(Transitions, Labels, CurrentState, [], F)
+    ),
+    write('Checking for AF...'), nl.
