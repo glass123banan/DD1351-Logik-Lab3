@@ -109,4 +109,3 @@ check(Transitions, Labels, CurrentState, Visited, af(F)) :-
             )
         )
     ).
-    
