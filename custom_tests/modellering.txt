@@ -1,0 +1,26 @@
+[
+    [idle, [card_inserted]],
+    [card_inserted, [card_ejected]],
+    [pin_verified, [transaction_in_progress, card_ejected]],
+    [transaction_in_progress, [pin_verified, card_ejected]],
+    [card_ejected, [idle]]
+].
+
+[
+    [idle, [waiting]],                          % väntar på user  
+    [card_inserted, [waiting, card_detected]],  % väntar på user och detekterat ett kort
+    [pin_verified, [pin_correct]],              % PIN är verifierad
+    [transaction_in_progress, [transacting]],   % En transaktion pågår
+    [card_ejected, [card_removed]]              % Kortet har tagits ut
+
+].   
+
+% Starttillstånd
+%idle.
+transaction_in_progress.
+
+
+% CTL-fråga
+%ag(card_removed).
+ex(pin_correct).
+
